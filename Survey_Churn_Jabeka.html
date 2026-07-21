@@ -1,0 +1,1701 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Survey Churn Jabeka — CBN Fiber CVM</title>
+<style>
+  :root {
+    --navy: #1E3A5F;
+    --navy-dark: #0F2340;
+    --teal: #0891B2;
+    --teal-light: #CFFAFE;
+    --amber: #F59E0B;
+    --amber-light: #FEF3C7;
+    --green: #10B981;
+    --green-light: #D1FAE5;
+    --red: #DC2626;
+    --red-light: #FEE2E2;
+    --purple: #7C3AED;
+    --purple-light: #EDE9FE;
+    --bg: #F8FAFC;
+    --card: #FFFFFF;
+    --border: #E2E8F0;
+    --text: #0F172A;
+    --muted: #64748B;
+    --muted-light: #94A3B8;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.5;
+    font-size: 15px;
+    -webkit-font-smoothing: antialiased;
+  }
+  .app { max-width: 720px; margin: 0 auto; min-height: 100vh; padding-bottom: 100px; }
+
+  /* Top bar */
+  .topbar {
+    background: var(--navy-dark);
+    color: white;
+    padding: 12px 16px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+  .topbar-title { font-size: 14px; font-weight: 600; letter-spacing: 0.5px; }
+  .topbar-title small { color: var(--teal); font-weight: 500; font-size: 11px; letter-spacing: 1.5px; display: block; }
+  .topbar-nav { display: flex; gap: 8px; }
+  .topbar-nav button {
+    background: transparent;
+    border: 1px solid #334155;
+    color: white;
+    padding: 6px 12px;
+    border-radius: 6px;
+    font-size: 12px;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .topbar-nav button:hover { background: #334155; }
+  .topbar-nav button.active { background: var(--teal); border-color: var(--teal); }
+
+  /* Progress bar */
+  .progress-container {
+    background: white;
+    padding: 12px 16px;
+    border-bottom: 1px solid var(--border);
+    position: sticky;
+    top: 51px;
+    z-index: 99;
+  }
+  .progress-label {
+    display: flex;
+    justify-content: space-between;
+    font-size: 12px;
+    color: var(--muted);
+    margin-bottom: 6px;
+  }
+  .progress-label strong { color: var(--text); }
+  .progress-bar {
+    height: 6px;
+    background: var(--border);
+    border-radius: 3px;
+    overflow: hidden;
+  }
+  .progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--teal), var(--green));
+    transition: width 0.3s ease;
+  }
+
+  /* Content */
+  .content { padding: 20px 16px; }
+  .section-badge {
+    display: inline-block;
+    background: var(--teal-light);
+    color: var(--navy-dark);
+    padding: 4px 10px;
+    border-radius: 4px;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 1px;
+    margin-bottom: 12px;
+  }
+  .section-badge.economic { background: var(--amber-light); color: #78350F; }
+  .section-badge.router { background: var(--amber); color: white; }
+
+  .section-title {
+    font-size: 22px;
+    font-weight: 700;
+    color: var(--navy-dark);
+    margin-bottom: 6px;
+  }
+  .section-subtitle {
+    color: var(--muted);
+    margin-bottom: 20px;
+    font-size: 14px;
+  }
+
+  /* Disclaimer box */
+  .disclaimer {
+    background: var(--amber-light);
+    border: 1px solid var(--amber);
+    border-radius: 8px;
+    padding: 14px 16px;
+    margin-bottom: 20px;
+    font-size: 13px;
+    color: #78350F;
+  }
+  .disclaimer strong { display: block; margin-bottom: 4px; font-size: 12px; letter-spacing: 1px; }
+
+  /* Question card */
+  .q-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 16px;
+    margin-bottom: 14px;
+  }
+  .q-card.trigger { border-color: var(--amber); background: #FFFBEB; }
+  .q-card.router-q { border-color: var(--amber); background: #FFFBEB; }
+  .q-header {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    margin-bottom: 12px;
+  }
+  .q-num {
+    background: var(--teal);
+    color: white;
+    padding: 3px 10px;
+    border-radius: 4px;
+    font-weight: 700;
+    font-size: 12px;
+    min-width: 34px;
+    text-align: center;
+    flex-shrink: 0;
+    line-height: 1.5;
+  }
+  .q-num.trigger, .q-num.router { background: var(--amber); }
+  .q-num.economic { background: var(--amber); }
+  .q-text {
+    font-weight: 600;
+    color: var(--text);
+    flex: 1;
+    font-size: 14.5px;
+  }
+  .q-badge {
+    background: var(--amber);
+    color: white;
+    padding: 2px 8px;
+    border-radius: 3px;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 1px;
+    align-self: flex-start;
+  }
+  .q-hint { font-size: 12px; color: var(--muted); margin-top: 4px; font-style: italic; }
+
+  /* Input elements */
+  .options { display: flex; flex-direction: column; gap: 8px; }
+  .option {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 12px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.15s;
+    background: white;
+  }
+  .option:hover { border-color: var(--teal); background: #F0F9FF; }
+  .option input { margin: 0; cursor: pointer; }
+  .option.selected { border-color: var(--teal); background: var(--teal-light); }
+  .option-text { font-size: 14px; flex: 1; }
+
+  .scale-group { display: flex; gap: 6px; margin-top: 8px; }
+  .scale-btn {
+    flex: 1;
+    padding: 12px 6px;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    background: white;
+    cursor: pointer;
+    font-weight: 600;
+    font-size: 14px;
+    transition: all 0.15s;
+  }
+  .scale-btn:hover { border-color: var(--teal); }
+  .scale-btn.selected { background: var(--teal); color: white; border-color: var(--teal); }
+  .scale-labels {
+    display: flex;
+    justify-content: space-between;
+    font-size: 11px;
+    color: var(--muted);
+    margin-top: 6px;
+  }
+
+  input[type="text"], input[type="number"], textarea {
+    width: 100%;
+    padding: 10px 12px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    font-family: inherit;
+    font-size: 14px;
+    background: white;
+    color: var(--text);
+  }
+  input[type="text"]:focus, input[type="number"]:focus, textarea:focus {
+    outline: none;
+    border-color: var(--teal);
+    box-shadow: 0 0 0 3px rgba(8, 145, 178, 0.1);
+  }
+  textarea { min-height: 80px; resize: vertical; }
+
+  /* Buttons / navigation */
+  .nav-bar {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: white;
+    border-top: 1px solid var(--border);
+    padding: 12px 16px;
+    display: flex;
+    gap: 10px;
+    max-width: 720px;
+    margin: 0 auto;
+    box-shadow: 0 -2px 8px rgba(0,0,0,0.04);
+  }
+  .btn {
+    flex: 1;
+    padding: 12px 20px;
+    border: none;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.15s;
+    font-family: inherit;
+  }
+  .btn:disabled { opacity: 0.4; cursor: not-allowed; }
+  .btn-primary { background: var(--teal); color: white; }
+  .btn-primary:hover:not(:disabled) { background: #0E7490; }
+  .btn-secondary { background: white; color: var(--text); border: 1px solid var(--border); }
+  .btn-secondary:hover:not(:disabled) { background: var(--bg); }
+  .btn-success { background: var(--green); color: white; }
+  .btn-success:hover:not(:disabled) { background: #059669; }
+  .btn-danger { background: var(--red); color: white; }
+  .btn-icon { flex: 0 0 auto; padding: 12px; }
+
+  /* Landing page */
+  .landing-hero {
+    background: linear-gradient(135deg, var(--navy-dark), var(--navy));
+    color: white;
+    padding: 40px 24px;
+    text-align: center;
+    border-radius: 0 0 24px 24px;
+  }
+  .landing-hero h1 { font-size: 26px; margin-bottom: 8px; }
+  .landing-hero p { opacity: 0.85; font-size: 14px; }
+  .landing-cta {
+    display: block;
+    width: 100%;
+    background: var(--amber);
+    color: var(--navy-dark);
+    padding: 16px;
+    text-align: center;
+    font-weight: 700;
+    border-radius: 12px;
+    border: none;
+    margin: 24px 16px 16px;
+    width: calc(100% - 32px);
+    font-size: 16px;
+    cursor: pointer;
+    box-shadow: 0 4px 12px rgba(245, 158, 11, 0.3);
+  }
+  .landing-cta:hover { background: #D97706; }
+
+  .drafts-list, .completed-list { padding: 16px; }
+  .list-heading {
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--muted);
+    letter-spacing: 1.5px;
+    margin: 20px 0 10px;
+  }
+  .draft-card {
+    background: white;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 14px 16px;
+    margin-bottom: 10px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .draft-info { flex: 1; }
+  .draft-name { font-weight: 600; margin-bottom: 4px; font-size: 14px; }
+  .draft-meta { font-size: 11px; color: var(--muted); }
+  .draft-actions { display: flex; gap: 6px; }
+  .draft-actions button {
+    padding: 6px 12px;
+    border-radius: 6px;
+    font-size: 12px;
+    border: 1px solid var(--border);
+    background: white;
+    cursor: pointer;
+  }
+  .draft-actions button.resume { background: var(--teal); color: white; border-color: var(--teal); }
+  .draft-actions button.delete { background: var(--red-light); color: var(--red); border-color: var(--red-light); }
+
+  /* Summary / completion */
+  .summary-card {
+    background: white;
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 20px;
+    margin-bottom: 16px;
+  }
+  .summary-section {
+    padding: 12px 0;
+    border-bottom: 1px solid var(--border);
+  }
+  .summary-section:last-child { border-bottom: none; }
+  .summary-section-title {
+    font-size: 12px;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 8px;
+    font-weight: 700;
+  }
+  .summary-qa {
+    display: flex;
+    justify-content: space-between;
+    padding: 6px 0;
+    gap: 12px;
+    font-size: 13px;
+  }
+  .summary-qa .q { color: var(--muted); flex: 1; }
+  .summary-qa .a { color: var(--text); font-weight: 600; text-align: right; max-width: 60%; }
+
+  .completion-banner {
+    background: var(--green-light);
+    border: 1px solid var(--green);
+    border-radius: 12px;
+    padding: 24px 20px;
+    text-align: center;
+    margin-bottom: 16px;
+  }
+  .completion-banner h2 { color: #065F46; margin-bottom: 8px; }
+  .completion-banner p { color: #047857; font-size: 14px; }
+
+  /* Admin dashboard */
+  .admin-view { padding: 16px; }
+  .stat-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    gap: 10px;
+    margin-bottom: 20px;
+  }
+  .stat-card {
+    background: white;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 14px;
+  }
+  .stat-label {
+    font-size: 10px;
+    letter-spacing: 1.5px;
+    color: var(--muted);
+    font-weight: 700;
+    margin-bottom: 6px;
+  }
+  .stat-value { font-size: 24px; font-weight: 700; color: var(--navy-dark); }
+  .stat-note { font-size: 11px; color: var(--muted); margin-top: 4px; }
+
+  .chart-card {
+    background: white;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 16px;
+    margin-bottom: 12px;
+  }
+  .chart-title { font-size: 13px; font-weight: 700; margin-bottom: 12px; color: var(--navy-dark); }
+  .bar-row { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; font-size: 12px; }
+  .bar-label { flex: 0 0 140px; color: var(--muted); }
+  .bar-track { flex: 1; height: 20px; background: var(--bg); border-radius: 4px; overflow: hidden; }
+  .bar-fill { height: 100%; background: var(--teal); display: flex; align-items: center; padding: 0 6px; color: white; font-weight: 600; font-size: 11px; }
+  .bar-count { flex: 0 0 30px; text-align: right; font-weight: 600; color: var(--text); }
+
+  .empty-state {
+    text-align: center;
+    padding: 40px 20px;
+    color: var(--muted);
+  }
+  .empty-state h3 { color: var(--text); margin-bottom: 8px; }
+
+  .export-bar {
+    background: white;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 12px;
+    display: flex;
+    gap: 10px;
+    margin-bottom: 16px;
+  }
+
+  /* Section separator card */
+  .section-router-card {
+    background: linear-gradient(135deg, var(--amber), #EAB308);
+    color: var(--navy-dark);
+    border-radius: 12px;
+    padding: 20px;
+    margin-bottom: 20px;
+    text-align: center;
+  }
+  .section-router-card strong { display: block; font-size: 12px; letter-spacing: 1.5px; margin-bottom: 4px; }
+  .section-router-card p { font-size: 14px; font-weight: 600; }
+
+  /* Modal */
+  .modal-overlay {
+    position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(15, 35, 64, 0.7);
+    display: none; align-items: center; justify-content: center;
+    z-index: 200; padding: 16px;
+  }
+  .modal-overlay.open { display: flex; }
+  .modal {
+    background: white;
+    border-radius: 14px;
+    max-width: 560px;
+    width: 100%;
+    max-height: 90vh;
+    overflow-y: auto;
+    padding: 24px;
+  }
+  .modal h3 { margin-bottom: 6px; color: var(--navy-dark); }
+  .modal p.help { color: var(--muted); font-size: 13px; margin-bottom: 16px; }
+  .modal label { display: block; font-size: 12px; font-weight: 700; color: var(--muted); letter-spacing: 0.5px; margin: 12px 0 6px; }
+  .modal input[type=text] { margin-bottom: 8px; font-family: monospace; font-size: 12px; }
+  .modal-actions { display: flex; gap: 10px; margin-top: 20px; }
+  .status-line {
+    display: flex; align-items: center; gap: 8px;
+    padding: 10px 12px; border-radius: 8px;
+    background: var(--bg); font-size: 13px; margin-top: 10px;
+  }
+  .status-line.ok { background: var(--green-light); color: #065F46; }
+  .status-line.warn { background: var(--amber-light); color: #78350F; }
+  .status-line.err { background: var(--red-light); color: #7F1D1D; }
+  .code-block {
+    background: #0F172A; color: #E2E8F0;
+    padding: 12px; border-radius: 8px;
+    font-family: monospace; font-size: 11px;
+    overflow-x: auto; white-space: pre; margin: 8px 0 12px;
+    max-height: 200px;
+    line-height: 1.5;
+  }
+  details { background: var(--bg); border-radius: 8px; padding: 10px 14px; margin: 8px 0; }
+  details summary { cursor: pointer; font-weight: 600; font-size: 13px; }
+
+  .sync-indicator {
+    position: fixed; bottom: 80px; right: 16px;
+    background: var(--navy-dark); color: white;
+    padding: 10px 14px; border-radius: 24px;
+    font-size: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+    z-index: 150; display: none; align-items: center; gap: 8px;
+  }
+  .sync-indicator.show { display: flex; }
+  .sync-spinner {
+    width: 12px; height: 12px; border: 2px solid rgba(255,255,255,0.3);
+    border-top-color: white; border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  @media (max-width: 480px) {
+    .scale-btn { padding: 10px 4px; font-size: 13px; }
+    .section-title { font-size: 20px; }
+    .q-text { font-size: 14px; }
+  }
+</style>
+</head>
+<body>
+<div class="app" id="app">
+  <div class="topbar">
+    <div class="topbar-title">
+      <small>CBN FIBER · CVM</small>
+      Survey Churn Jabeka
+    </div>
+    <div class="topbar-nav">
+      <button id="nav-home" class="active" onclick="navigate('home')">Home</button>
+      <button id="nav-admin" onclick="navigate('admin')">Admin</button>
+      <button id="nav-settings" onclick="openSettings()" title="Pengaturan sync">⚙</button>
+    </div>
+  </div>
+  <div id="progress-container"></div>
+  <div id="view"></div>
+  <div id="nav-bar-container"></div>
+</div>
+
+<div class="sync-indicator" id="sync-indicator">
+  <div class="sync-spinner"></div>
+  <span id="sync-indicator-text">Syncing...</span>
+</div>
+
+<div class="modal-overlay" id="settings-modal">
+  <div class="modal">
+    <h3>Pengaturan Sync Google Sheets</h3>
+    <p class="help">Integrasi opsional — data survey otomatis dikirim ke Google Sheet setelah submit. Kalau kosong, data tetap tersimpan di device.</p>
+
+    <label>APPS SCRIPT WEB APP URL</label>
+    <input type="text" id="settings-url" placeholder="https://script.google.com/macros/s/AKfyc.../exec">
+
+    <label>SHARED SECRET (opsional, harus match dengan Apps Script)</label>
+    <input type="text" id="settings-secret" placeholder="Contoh: cbn-jabeka-2026">
+
+    <div id="settings-status"></div>
+
+    <details>
+      <summary>📋 Setup Apps Script (klik untuk expand)</summary>
+      <p class="help" style="margin-top:10px">Langkah setup di Google Sheets:</p>
+      <ol style="font-size:13px; padding-left:20px; line-height:1.7; color:var(--text)">
+        <li>Buat Google Sheet baru → beri nama (misal <b>"Survey Churn Jabeka 2026"</b>)</li>
+        <li>Menu <b>Extensions → Apps Script</b></li>
+        <li>Hapus kode default, paste kode di bawah</li>
+        <li>Ubah <code>SECRET</code> agar match dengan field di atas</li>
+        <li>Simpan (💾), lalu klik <b>Deploy → New Deployment</b></li>
+        <li>Type: <b>Web app</b> · Execute as: <b>Me</b> · Access: <b>Anyone</b></li>
+        <li>Copy <b>Web App URL</b> → paste ke field di atas</li>
+        <li>Klik <b>Test Sync</b> di bawah untuk verifikasi</li>
+      </ol>
+      <div class="code-block" id="apps-script-code"></div>
+      <button class="btn btn-secondary" style="width:100%" onclick="copyAppsScript()">📋 Copy Kode Apps Script</button>
+    </details>
+
+    <div class="modal-actions">
+      <button class="btn btn-secondary" onclick="closeSettings()">Tutup</button>
+      <button class="btn btn-secondary" onclick="testSync()">Test Sync</button>
+      <button class="btn btn-primary" onclick="saveSettings()">Simpan</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ==========================================================================
+// SURVEY SCHEMA — defines questions, branching logic, section flow
+// ==========================================================================
+
+const SCHEMA = {
+  A: {
+    label: "A. Pembukaan & Verifikasi",
+    subtitle: "Cukup catat Customer ID — data profil lengkap akan di-join dari CRM.",
+    required: true,
+    color: "navy",
+    questions: [
+      { id: "q1_customer_id", type: "text", num: "1", text: "Customer ID sesuai Work Order",
+        placeholder: "Contoh: CBN-JBK-000123", hint: "Data profil (nama, alamat, paket, vintage) akan di-join dari CRM berdasarkan ID ini." },
+      { id: "q4_bersedia", type: "single", num: "4", text: "Apakah pelanggan bersedia diwawancara?",
+        options: [
+          { val: "ya", text: "Ya, bersedia lanjut" },
+          { val: "tidak", text: "Tidak bersedia — catat alasan di catatan surveyor" }
+        ]
+      },
+    ]
+  },
+  B: {
+    label: "B. Alasan Utama Berhenti",
+    subtitle: "Jawaban No. 5 menentukan section root cause yang akan dibuka.",
+    required: true,
+    color: "teal",
+    questions: [
+      { id: "q5_alasan_utama", type: "single", num: "5", text: "Apa alasan UTAMA berhenti berlangganan CBN?",
+        badge: "ROUTER",
+        options: [
+          { val: "jaringan", text: "Masalah jaringan / koneksi" },
+          { val: "harga", text: "Harga terlalu mahal" },
+          { val: "kompetitor", text: "Pindah ke provider lain" },
+          { val: "domisili", text: "Pindah domisili" },
+          { val: "tidak_butuh", text: "Tidak butuh internet rumah" },
+          { val: "layanan", text: "Pelayanan kurang memuaskan" },
+          { val: "lainnya", text: "Lainnya" }
+        ]
+      },
+      { id: "q6_alasan_tambahan", type: "multi", num: "6", text: "Faktor lain yang turut memengaruhi (maks 2)",
+        maxSelect: 2,
+        options: [
+          { val: "jaringan", text: "Masalah jaringan / koneksi" },
+          { val: "harga", text: "Harga terlalu mahal" },
+          { val: "kompetitor", text: "Pindah ke provider lain" },
+          { val: "layanan", text: "Pelayanan kurang memuaskan" },
+          { val: "lainnya", text: "Lainnya" },
+          { val: "tidak_ada", text: "Tidak ada faktor tambahan" }
+        ]
+      },
+      { id: "q7_momen", type: "textarea", num: "7", text: "Sejak kapan mulai merasa tidak puas?",
+        placeholder: "Sejak awal / momen pemicu tertentu — jelaskan singkat" }
+    ]
+  },
+  C: {
+    label: "C. Root Cause: Jaringan",
+    subtitle: "Kondisional — hanya ditampilkan jika alasan utama/tambahan menyebut jaringan.",
+    conditional: true,
+    trigger: (data) => data.q5_alasan_utama === "jaringan" || (data.q6_alasan_tambahan || []).includes("jaringan"),
+    color: "teal",
+    questions: [
+      { id: "q8_gangguan", type: "scale", num: "8", text: "Seberapa sering mengalami gangguan koneksi dalam sebulan terakhir sebelum churn?",
+        min: 1, max: 5, minLabel: "Tidak pernah", maxLabel: "Sangat sering" },
+      { id: "q9_lapor", type: "single", num: "9", text: "Pernah melaporkan keluhan ke CBN? Jika ya, ditangani cepat?",
+        options: [
+          { val: "ya_cepat", text: "Ya, ditangani cepat" },
+          { val: "ya_lambat", text: "Ya, ditangani lambat" },
+          { val: "tidak_pernah", text: "Tidak pernah melaporkan" }
+        ]
+      },
+      { id: "q10_kecepatan", type: "single", num: "10", text: "Kecepatan internet yang diterima sesuai paket yang dibayar?",
+        options: [
+          { val: "ya", text: "Ya, sesuai" },
+          { val: "tidak", text: "Tidak sesuai" }
+        ]
+      },
+      { id: "q10_jelaskan", type: "textarea", num: "10b", text: "Jika tidak sesuai, jelaskan:",
+        placeholder: "Optional", showIf: (data) => data.q10_kecepatan === "tidak" }
+    ]
+  },
+  D: {
+    label: "D. Root Cause: Harga",
+    subtitle: "Kondisional — hanya ditampilkan jika alasan utama/tambahan menyebut harga.",
+    conditional: true,
+    trigger: (data) => data.q5_alasan_utama === "harga" || (data.q6_alasan_tambahan || []).includes("harga"),
+    color: "red",
+    questions: [
+      { id: "q11_value", type: "scale", num: "11", text: "Harga paket CBN sesuai kualitas layanan yang diterima?",
+        min: 1, max: 5, minLabel: "Sangat tidak sesuai", maxLabel: "Sangat sesuai" },
+      { id: "q12_kenaikan", type: "single", num: "12", text: "Ada kenaikan harga/biaya yang dirasakan sebelum memutuskan churn?",
+        options: [
+          { val: "ya", text: "Ya, ada kenaikan" },
+          { val: "tidak", text: "Tidak ada kenaikan" }
+        ]
+      },
+      { id: "q13_wajar", type: "text", num: "13", text: "Kisaran harga yang dianggap wajar untuk kecepatan yang digunakan?",
+        placeholder: "Contoh: Rp 200.000 – Rp 250.000" },
+      { id: "q13b_trigger", type: "single", num: "13b", text: "Kenaikan biaya itu karena tarif CBN naik, atau kondisi keuangan rumah tangga berubah?",
+        badge: "TRIGGER",
+        showIf: (data) => data.q12_kenaikan === "ya" || data.q11_value <= 2,
+        options: [
+          { val: "tarif_naik", text: "Tarif CBN naik" },
+          { val: "keuangan", text: "Kondisi keuangan rumah tangga berubah" },
+          { val: "keduanya", text: "Keduanya" }
+        ]
+      }
+    ]
+  },
+  D2: {
+    label: "D2. Tekanan Ekonomi",
+    subtitle: "Sub-branch dari Harga. Buka dengan disclaimer.",
+    isEconomic: true,
+    conditional: true,
+    trigger: (data) => data.q13b_trigger === "keuangan" || data.q13b_trigger === "keduanya",
+    color: "amber",
+    disclaimer: "Beberapa pertanyaan berikut menyangkut kondisi ekonomi rumah tangga, semata untuk membantu kami memberikan penawaran yang lebih sesuai. Bapak/Ibu berhak tidak menjawab.",
+    questions: [
+      { id: "d2_1_perubahan", type: "single", num: "D2.1", text: "Apa perubahan kondisi keuangan yang paling berpengaruh dalam 3–6 bulan terakhir?",
+        options: [
+          { val: "penghasilan_turun", text: "Penghasilan menurun" },
+          { val: "kehilangan_kerja", text: "Kehilangan pekerjaan" },
+          { val: "pengeluaran_besar", text: "Pengeluaran besar tak terduga (kesehatan, pendidikan, dll)" },
+          { val: "tidak_jawab", text: "Tidak ingin menjawab" }
+        ]
+      },
+      { id: "d2_2_prioritas", type: "single", num: "D2.2", text: "Ketika harus memangkas pengeluaran, di posisi mana internet rumah dipertimbangkan?",
+        options: [
+          { val: "pertama", text: "Prioritas dipotong pertama" },
+          { val: "tengah", text: "Di tengah — bersamaan dengan pengeluaran lain" },
+          { val: "terakhir", text: "Prioritas terakhir dipotong" }
+        ]
+      },
+      { id: "d2_3_fleksibel", type: "single", num: "D2.3", text: "Jika CBN menawarkan skema fleksibel (paket lebih rendah, jeda tagihan, downgrade sementara), bersedia dipertimbangkan?",
+        hint: "★ Key Win-Back Signal",
+        options: [
+          { val: "ya_pasti", text: "Ya, pasti" },
+          { val: "mungkin", text: "Mungkin — dengan syarat tertentu" },
+          { val: "tidak", text: "Tidak" }
+        ]
+      }
+    ]
+  },
+  E: {
+    label: "E. Root Cause: Kompetitor",
+    subtitle: "Kondisional — hanya ditampilkan jika alasan utama/tambahan menyebut pindah provider.",
+    conditional: true,
+    trigger: (data) => data.q5_alasan_utama === "kompetitor" || (data.q6_alasan_tambahan || []).includes("kompetitor"),
+    color: "purple",
+    questions: [
+      { id: "q14_provider", type: "text", num: "14", text: "Provider baru yang digunakan (jika ada)",
+        placeholder: "Contoh: MyRepublic / IndiHome / HiFi" },
+      { id: "q15_kelebihan", type: "multi", num: "15", text: "Kelebihan provider baru dibanding CBN",
+        options: [
+          { val: "harga", text: "Harga lebih murah" },
+          { val: "bundling_tv", text: "Bundling TV" },
+          { val: "promo", text: "Promo menarik" },
+          { val: "kecepatan", text: "Kecepatan lebih stabil" },
+          { val: "cs", text: "Customer service lebih baik" },
+          { val: "lainnya", text: "Lainnya" }
+        ]
+      },
+      { id: "q16_promo_unik", type: "textarea", num: "16", text: "Promo yang tidak dimiliki CBN — sebutkan",
+        placeholder: "Optional" }
+    ]
+  },
+  F: {
+    label: "F. Root Cause: Layanan",
+    subtitle: "Kondisional — hanya ditampilkan jika alasan utama/tambahan menyebut pelayanan.",
+    conditional: true,
+    trigger: (data) => data.q5_alasan_utama === "layanan" || (data.q6_alasan_tambahan || []).includes("layanan"),
+    color: "green",
+    questions: [
+      { id: "q17_cs", type: "scale", num: "17", text: "Pengalaman terakhir menghubungi customer service CBN",
+        min: 1, max: 5, minLabel: "Sangat buruk", maxLabel: "Sangat baik" },
+      { id: "q18_komplain", type: "single", num: "18", text: "Pernah mengajukan komplain namun merasa tidak ada tindak lanjut?",
+        options: [
+          { val: "ya", text: "Ya, ceritakan di bawah" },
+          { val: "tidak", text: "Tidak" }
+        ]
+      },
+      { id: "q18_cerita", type: "textarea", num: "18b", text: "Ceritakan pengalaman komplain",
+        placeholder: "Optional", showIf: (data) => data.q18_komplain === "ya" },
+      { id: "q19_teknisi", type: "single", num: "19", text: "Proses teknisi datang ke rumah cepat dan solutif?",
+        options: [
+          { val: "ya", text: "Ya, cepat & solutif" },
+          { val: "tidak", text: "Tidak" },
+          { val: "tidak_pernah", text: "Tidak pernah menggunakan" }
+        ]
+      }
+    ]
+  },
+  G: {
+    label: "G. Potensi Win-Back",
+    subtitle: "Wajib — semua pelanggan. Output utama kunjungan.",
+    required: true,
+    color: "teal",
+    questions: [
+      { id: "q20_winback", type: "single", num: "20", text: "Jika CBN memberi penawaran khusus, bersedia berlangganan kembali?",
+        options: [
+          { val: "ya", text: "Ya, pasti" },
+          { val: "mungkin", text: "Mungkin" },
+          { val: "tidak", text: "Tidak" }
+        ]
+      },
+      { id: "q21_penawaran", type: "multi", num: "21", text: "Penawaran yang paling menarik untuk kembali berlangganan",
+        options: [
+          { val: "diskon", text: "Diskon harga" },
+          { val: "upgrade", text: "Upgrade speed" },
+          { val: "bundling_tv", text: "Bundling TV" },
+          { val: "instalasi", text: "Gratis instalasi ulang" },
+          { val: "paket_ringan", text: "Paket entry-level lebih terjangkau" },
+          { val: "lainnya", text: "Lainnya" }
+        ]
+      },
+      { id: "q21_lainnya", type: "text", num: "21b", text: "Penawaran lainnya — jelaskan",
+        placeholder: "Optional", showIf: (data) => (data.q21_penawaran || []).includes("lainnya") },
+      { id: "q22_kontak", type: "single", num: "22", text: "Bolehkah CBN menghubungi kembali untuk penawaran win-back?",
+        options: [
+          { val: "ya", text: "Ya, boleh" },
+          { val: "tidak", text: "Tidak" }
+        ]
+      }
+    ]
+  },
+  H: {
+    label: "H. Penutup",
+    subtitle: "Konfirmasi akhir + catatan surveyor.",
+    required: true,
+    color: "navy",
+    questions: [
+      { id: "q23_masukan", type: "textarea", num: "23", text: "Masukan lain untuk perbaikan layanan CBN?",
+        placeholder: "Optional" },
+      { id: "q24_surveyor", type: "text", num: "24a", text: "Nama surveyor", placeholder: "Nama surveyor" },
+      { id: "q24_tanggal", type: "text", num: "24b", text: "Tanggal visit", placeholder: "DD/MM/YYYY" },
+      { id: "q24_catatan", type: "textarea", num: "24c", text: "Catatan surveyor (kondisi lapangan, foto/geotag notes)",
+        placeholder: "Optional" }
+    ]
+  }
+};
+
+// ==========================================================================
+// STATE
+// ==========================================================================
+
+const STORAGE_KEY = "cbn_survey_churn_jabeka";
+let state = {
+  view: "home",  // home | survey | admin | summary
+  currentDraftId: null,
+  currentSectionIdx: 0,
+  data: {},
+  activeSections: []  // computed from branching logic
+};
+
+// ==========================================================================
+// STORAGE HELPERS
+// ==========================================================================
+
+function loadStore() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    return raw ? JSON.parse(raw) : { drafts: {}, completed: [] };
+  } catch (e) {
+    return { drafts: {}, completed: [] };
+  }
+}
+function saveStore(store) {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(store));
+}
+function newId() {
+  return "S" + Date.now().toString(36) + Math.random().toString(36).slice(2, 6).toUpperCase();
+}
+
+// ==========================================================================
+// BRANCHING LOGIC — compute which sections apply
+// ==========================================================================
+
+function computeActiveSections(data) {
+  const active = [];
+  for (const key of Object.keys(SCHEMA)) {
+    const sec = SCHEMA[key];
+    if (sec.required) {
+      active.push(key);
+    } else if (sec.conditional && sec.trigger && sec.trigger(data)) {
+      active.push(key);
+    }
+  }
+  return active;
+}
+
+// ==========================================================================
+// RENDERING
+// ==========================================================================
+
+function el(tag, attrs = {}, children = []) {
+  const e = document.createElement(tag);
+  Object.entries(attrs).forEach(([k, v]) => {
+    if (k === "className") e.className = v;
+    else if (k === "onclick") e.onclick = v;
+    else if (k === "oninput") e.oninput = v;
+    else if (k === "onchange") e.onchange = v;
+    else e.setAttribute(k, v);
+  });
+  (Array.isArray(children) ? children : [children]).forEach((c) => {
+    if (c == null) return;
+    if (typeof c === "string") e.appendChild(document.createTextNode(c));
+    else e.appendChild(c);
+  });
+  return e;
+}
+
+function render() {
+  document.getElementById("progress-container").innerHTML = "";
+  document.getElementById("view").innerHTML = "";
+  document.getElementById("nav-bar-container").innerHTML = "";
+  document.getElementById("nav-home").classList.toggle("active", state.view === "home");
+  document.getElementById("nav-admin").classList.toggle("active", state.view === "admin");
+
+  if (state.view === "home") return renderHome();
+  if (state.view === "survey") return renderSurvey();
+  if (state.view === "summary") return renderSummary();
+  if (state.view === "admin") return renderAdmin();
+}
+
+function renderHome() {
+  const store = loadStore();
+  const drafts = Object.entries(store.drafts || {});
+  const view = document.getElementById("view");
+  view.innerHTML = "";
+
+  const hero = el("div", { className: "landing-hero" }, [
+    el("h1", {}, "Survey Churn Pelanggan"),
+    el("p", {}, "Instrumen kuesioner dengan skip-logic untuk visit lapangan Jabeka.")
+  ]);
+  view.appendChild(hero);
+
+  const cta = el("button", { className: "landing-cta", onclick: startNewSurvey },
+    "+ Mulai Survey Baru");
+  view.appendChild(cta);
+
+  const listWrap = el("div", { className: "drafts-list" });
+  if (drafts.length > 0) {
+    listWrap.appendChild(el("div", { className: "list-heading" }, `DRAFT TERSIMPAN (${drafts.length})`));
+    drafts.sort((a, b) => (b[1].updatedAt || 0) - (a[1].updatedAt || 0)).forEach(([id, draft]) => {
+      const name = draft.data.q1_customer_id || "Belum diisi";
+      const meta = new Date(draft.updatedAt).toLocaleString("id-ID", { day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" });
+      const card = el("div", { className: "draft-card" }, [
+        el("div", { className: "draft-info" }, [
+          el("div", { className: "draft-name" }, name),
+          el("div", { className: "draft-meta" }, `${id.slice(0, 8)} · ${meta}`)
+        ]),
+        el("div", { className: "draft-actions" }, [
+          el("button", { className: "resume", onclick: () => resumeDraft(id) }, "Lanjutkan"),
+          el("button", { className: "delete", onclick: () => deleteDraft(id) }, "Hapus")
+        ])
+      ]);
+      listWrap.appendChild(card);
+    });
+  }
+
+  const completed = store.completed || [];
+  if (completed.length > 0) {
+    listWrap.appendChild(el("div", { className: "list-heading" }, `RIWAYAT SELESAI (${completed.length})`));
+    completed.slice().reverse().slice(0, 5).forEach((c) => {
+      const name = c.data.q1_customer_id || "-";
+      const alasan = c.data.q5_alasan_utama || "-";
+      const meta = new Date(c.completedAt).toLocaleString("id-ID", { day: "2-digit", month: "short" });
+      const syncBadge = c.synced ? "✓ Synced" : "⏳ Pending sync";
+      const syncColor = c.synced ? "color: var(--green)" : "color: var(--amber)";
+      const card = el("div", { className: "draft-card" }, [
+        el("div", { className: "draft-info" }, [
+          el("div", { className: "draft-name" }, name),
+          el("div", { className: "draft-meta" }, `${meta} · Alasan: ${alasan} · `),
+        ])
+      ]);
+      const badgeSpan = el("span", { style: syncColor + "; font-size:11px; font-weight:600" }, syncBadge);
+      card.querySelector(".draft-meta").appendChild(badgeSpan);
+      listWrap.appendChild(card);
+    });
+  }
+
+  if (drafts.length === 0 && completed.length === 0) {
+    listWrap.appendChild(el("div", { className: "empty-state" }, [
+      el("h3", {}, "Belum ada survey"),
+      el("p", {}, "Klik tombol di atas untuk memulai survey baru.")
+    ]));
+  }
+  view.appendChild(listWrap);
+}
+
+function startNewSurvey() {
+  const id = newId();
+  state.currentDraftId = id;
+  state.data = {};
+  state.currentSectionIdx = 0;
+  state.activeSections = computeActiveSections({});
+  state.view = "survey";
+  saveDraft();
+  render();
+}
+
+function resumeDraft(id) {
+  const store = loadStore();
+  const draft = store.drafts[id];
+  if (!draft) return;
+  state.currentDraftId = id;
+  state.data = draft.data || {};
+  state.activeSections = computeActiveSections(state.data);
+  state.currentSectionIdx = Math.min(draft.sectionIdx || 0, state.activeSections.length - 1);
+  state.view = "survey";
+  render();
+}
+
+function deleteDraft(id) {
+  if (!confirm("Hapus draft ini?")) return;
+  const store = loadStore();
+  delete store.drafts[id];
+  saveStore(store);
+  render();
+}
+
+function saveDraft() {
+  const store = loadStore();
+  store.drafts[state.currentDraftId] = {
+    data: state.data,
+    sectionIdx: state.currentSectionIdx,
+    updatedAt: Date.now()
+  };
+  saveStore(store);
+}
+
+// ==========================================================================
+// SURVEY RENDERING
+// ==========================================================================
+
+function renderSurvey() {
+  // Recompute active sections in case data changed
+  state.activeSections = computeActiveSections(state.data);
+  if (state.currentSectionIdx >= state.activeSections.length) {
+    state.view = "summary";
+    return render();
+  }
+  const sectionKey = state.activeSections[state.currentSectionIdx];
+  const section = SCHEMA[sectionKey];
+
+  // Progress
+  const progressPct = ((state.currentSectionIdx + 1) / state.activeSections.length) * 100;
+  const progressContainer = document.getElementById("progress-container");
+  progressContainer.innerHTML = "";
+  const pWrap = el("div", { className: "progress-container" }, [
+    el("div", { className: "progress-label" }, [
+      el("span", {}, `Section ${state.currentSectionIdx + 1} dari ${state.activeSections.length}`),
+      el("strong", {}, section.label.split(".")[0] + ".")
+    ]),
+    el("div", { className: "progress-bar" }, [
+      el("div", { className: "progress-fill", style: `width: ${progressPct}%` })
+    ])
+  ]);
+  progressContainer.appendChild(pWrap);
+
+  // Section content
+  const view = document.getElementById("view");
+  view.innerHTML = "";
+  const content = el("div", { className: "content" });
+
+  const badgeClass = section.isEconomic ? "section-badge economic" : "section-badge";
+  content.appendChild(el("span", { className: badgeClass }, section.label.split(".")[0] + "  •  " + section.label.split(".").slice(1).join(".").trim().toUpperCase()));
+  content.appendChild(el("h2", { className: "section-title" }, section.label));
+  content.appendChild(el("p", { className: "section-subtitle" }, section.subtitle));
+
+  if (section.disclaimer) {
+    content.appendChild(el("div", { className: "disclaimer" }, [
+      el("strong", {}, "⚠  PROTOKOL SURVEYOR — BACAKAN KE PELANGGAN"),
+      section.disclaimer
+    ]));
+  }
+
+  section.questions.forEach((q) => {
+    if (q.showIf && !q.showIf(state.data)) return;
+    content.appendChild(renderQuestion(q));
+  });
+
+  view.appendChild(content);
+
+  // Nav bar
+  const navBarContainer = document.getElementById("nav-bar-container");
+  navBarContainer.innerHTML = "";
+  const isLast = state.currentSectionIdx === state.activeSections.length - 1;
+  const bar = el("div", { className: "nav-bar" }, [
+    el("button", { className: "btn btn-secondary", onclick: goHome }, "Simpan & Keluar"),
+    ...(state.currentSectionIdx > 0 ? [el("button", { className: "btn btn-secondary", onclick: prevSection }, "← Kembali")] : []),
+    el("button", {
+      className: isLast ? "btn btn-success" : "btn btn-primary",
+      onclick: nextSection
+    }, isLast ? "Lanjut ke Ringkasan →" : "Berikutnya →")
+  ]);
+  navBarContainer.appendChild(bar);
+}
+
+function renderQuestion(q) {
+  const card = el("div", { className: "q-card" + (q.badge === "TRIGGER" ? " trigger" : "") + (q.badge === "ROUTER" ? " router-q" : "") });
+  const header = el("div", { className: "q-header" }, [
+    el("span", { className: "q-num" + (q.badge === "TRIGGER" ? " trigger" : "") + (q.badge === "ROUTER" ? " router" : "") + (q.num.startsWith("D2") ? " economic" : "") }, q.num),
+    el("div", { className: "q-text", style: "flex:1" }, [
+      q.text,
+      ...(q.hint ? [el("div", { className: "q-hint" }, q.hint)] : [])
+    ]),
+    ...(q.badge ? [el("span", { className: "q-badge" }, "★ " + q.badge)] : [])
+  ]);
+  card.appendChild(header);
+
+  if (q.type === "text") {
+    const input = el("input", { type: "text", placeholder: q.placeholder || "" });
+    input.value = state.data[q.id] || "";
+    input.oninput = (e) => { state.data[q.id] = e.target.value; debouncedSave(); };
+    card.appendChild(input);
+  } else if (q.type === "number") {
+    const input = el("input", { type: "number", placeholder: q.placeholder || "" });
+    input.value = state.data[q.id] || "";
+    input.oninput = (e) => { state.data[q.id] = e.target.value; debouncedSave(); };
+    card.appendChild(input);
+  } else if (q.type === "textarea") {
+    const input = el("textarea", { placeholder: q.placeholder || "" });
+    input.value = state.data[q.id] || "";
+    input.oninput = (e) => { state.data[q.id] = e.target.value; debouncedSave(); };
+    card.appendChild(input);
+  } else if (q.type === "single") {
+    const opts = el("div", { className: "options" });
+    q.options.forEach((opt) => {
+      const selected = state.data[q.id] === opt.val;
+      const optEl = el("label", { className: "option" + (selected ? " selected" : "") }, [
+        el("input", { type: "radio", name: q.id, value: opt.val, ...(selected ? { checked: "checked" } : {}) }),
+        el("span", { className: "option-text" }, opt.text)
+      ]);
+      optEl.onclick = () => {
+        state.data[q.id] = opt.val;
+        saveDraft();
+        renderSurvey();  // re-render to show conditional questions
+      };
+      opts.appendChild(optEl);
+    });
+    card.appendChild(opts);
+  } else if (q.type === "multi") {
+    const opts = el("div", { className: "options" });
+    const current = state.data[q.id] || [];
+    q.options.forEach((opt) => {
+      const selected = current.includes(opt.val);
+      const optEl = el("label", { className: "option" + (selected ? " selected" : "") }, [
+        el("input", { type: "checkbox", value: opt.val, ...(selected ? { checked: "checked" } : {}) }),
+        el("span", { className: "option-text" }, opt.text)
+      ]);
+      optEl.onclick = (e) => {
+        if (e.target.tagName !== "INPUT") e.preventDefault();
+        let cur = state.data[q.id] || [];
+        if (cur.includes(opt.val)) {
+          cur = cur.filter((v) => v !== opt.val);
+        } else {
+          if (q.maxSelect && cur.length >= q.maxSelect) {
+            alert(`Maksimal ${q.maxSelect} pilihan`);
+            return;
+          }
+          cur = [...cur, opt.val];
+        }
+        state.data[q.id] = cur;
+        saveDraft();
+        renderSurvey();
+      };
+      opts.appendChild(optEl);
+    });
+    card.appendChild(opts);
+  } else if (q.type === "scale") {
+    const group = el("div", { className: "scale-group" });
+    for (let v = q.min; v <= q.max; v++) {
+      const selected = state.data[q.id] === v;
+      const btn = el("button", { className: "scale-btn" + (selected ? " selected" : "") }, String(v));
+      btn.onclick = () => {
+        state.data[q.id] = v;
+        saveDraft();
+        renderSurvey();
+      };
+      group.appendChild(btn);
+    }
+    card.appendChild(group);
+    if (q.minLabel || q.maxLabel) {
+      card.appendChild(el("div", { className: "scale-labels" }, [
+        el("span", {}, q.minLabel || ""),
+        el("span", {}, q.maxLabel || "")
+      ]));
+    }
+  }
+  return card;
+}
+
+let saveTimer = null;
+function debouncedSave() {
+  if (saveTimer) clearTimeout(saveTimer);
+  saveTimer = setTimeout(saveDraft, 400);
+}
+
+function nextSection() {
+  saveDraft();
+  state.currentSectionIdx++;
+  state.activeSections = computeActiveSections(state.data);
+  if (state.currentSectionIdx >= state.activeSections.length) {
+    state.view = "summary";
+  }
+  render();
+  window.scrollTo(0, 0);
+}
+function prevSection() {
+  saveDraft();
+  state.currentSectionIdx = Math.max(0, state.currentSectionIdx - 1);
+  render();
+  window.scrollTo(0, 0);
+}
+function goHome() {
+  saveDraft();
+  state.view = "home";
+  render();
+}
+
+function navigate(v) {
+  state.view = v;
+  state.currentDraftId = null;
+  render();
+}
+
+// ==========================================================================
+// SUMMARY & SUBMIT
+// ==========================================================================
+
+function renderSummary() {
+  const view = document.getElementById("view");
+  view.innerHTML = "";
+  const content = el("div", { className: "content" });
+  content.appendChild(el("span", { className: "section-badge" }, "RINGKASAN"));
+  content.appendChild(el("h2", { className: "section-title" }, "Ringkasan Jawaban"));
+  content.appendChild(el("p", { className: "section-subtitle" }, "Periksa kembali jawaban sebelum submit. Klik 'Kembali' untuk revisi."));
+
+  const card = el("div", { className: "summary-card" });
+  state.activeSections.forEach((secKey) => {
+    const sec = SCHEMA[secKey];
+    const secDiv = el("div", { className: "summary-section" });
+    secDiv.appendChild(el("div", { className: "summary-section-title" }, sec.label));
+    sec.questions.forEach((q) => {
+      if (q.showIf && !q.showIf(state.data)) return;
+      const val = state.data[q.id];
+      let displayVal = "-";
+      if (val != null && val !== "") {
+        if (Array.isArray(val)) {
+          displayVal = val.map((v) => {
+            const opt = (q.options || []).find((o) => o.val === v);
+            return opt ? opt.text : v;
+          }).join(", ");
+        } else if (q.options) {
+          const opt = q.options.find((o) => o.val === val);
+          displayVal = opt ? opt.text : val;
+        } else {
+          displayVal = String(val);
+        }
+      }
+      secDiv.appendChild(el("div", { className: "summary-qa" }, [
+        el("span", { className: "q" }, `${q.num}. ${q.text}`),
+        el("span", { className: "a" }, displayVal)
+      ]));
+    });
+    card.appendChild(secDiv);
+  });
+  content.appendChild(card);
+  view.appendChild(content);
+
+  const navBarContainer = document.getElementById("nav-bar-container");
+  navBarContainer.innerHTML = "";
+  const bar = el("div", { className: "nav-bar" }, [
+    el("button", { className: "btn btn-secondary", onclick: () => { state.view = "survey"; state.currentSectionIdx = state.activeSections.length - 1; render(); } }, "← Kembali Revisi"),
+    el("button", { className: "btn btn-success", onclick: submitSurvey }, "✓ Submit Survey")
+  ]);
+  navBarContainer.appendChild(bar);
+}
+
+async function submitSurvey() {
+  if (!confirm("Submit survey ini? Setelah submit, jawaban tidak bisa diedit lagi.")) return;
+  const store = loadStore();
+  const completedEntry = {
+    id: state.currentDraftId,
+    data: { ...state.data },
+    activeSections: [...state.activeSections],
+    completedAt: Date.now(),
+    synced: false
+  };
+  store.completed = store.completed || [];
+  store.completed.push(completedEntry);
+  delete store.drafts[state.currentDraftId];
+  saveStore(store);
+
+  // Auto-sync ke Google Sheets kalau URL sudah di-set
+  const settings = loadSettings();
+  if (settings.url) {
+    showSyncIndicator("Mengirim ke Google Sheets...");
+    const result = await syncRecord(completedEntry);
+    if (result.ok) {
+      completedEntry.synced = true;
+      completedEntry.syncedAt = Date.now();
+      saveStore(store);
+      hideSyncIndicator();
+      alert("Survey berhasil disimpan & tersinkronisasi ke Google Sheets.");
+    } else {
+      hideSyncIndicator();
+      alert("Survey tersimpan di device, tapi gagal sync ke Sheets. Gunakan tombol 'Sync Pending' di admin untuk retry.");
+    }
+  } else {
+    alert("Survey berhasil disimpan. (Sync Google Sheets belum diaktifkan — lihat Settings ⚙)");
+  }
+
+  state.view = "home";
+  state.data = {};
+  state.currentDraftId = null;
+  render();
+}
+
+// ==========================================================================
+// ADMIN DASHBOARD
+// ==========================================================================
+
+function renderAdmin() {
+  const view = document.getElementById("view");
+  view.innerHTML = "";
+  const store = loadStore();
+  const completed = store.completed || [];
+
+  const wrap = el("div", { className: "admin-view" });
+  wrap.appendChild(el("h2", { className: "section-title" }, "Admin Dashboard"));
+  wrap.appendChild(el("p", { className: "section-subtitle" }, "Ringkasan agregat semua survey yang telah selesai."));
+
+  // Sync status card
+  const pendingCount = completed.filter((c) => !c.synced).length;
+  const settings = loadSettings();
+  const syncStatusCard = el("div", { className: "chart-card" }, [
+    el("div", { className: "chart-title" }, "Status Sync Google Sheets"),
+    el("div", { style: "font-size:13px; line-height:1.7" }, [
+      el("div", {}, [
+        el("span", { style: "color:var(--muted)" }, "Endpoint: "),
+        el("span", { style: "font-family:monospace; font-size:11px" }, settings.url ? (settings.url.slice(0, 50) + "...") : "belum di-set")
+      ]),
+      el("div", { style: "margin-top:4px" }, [
+        el("span", { style: "color:var(--muted)" }, "Pending sync: "),
+        el("strong", { style: pendingCount > 0 ? "color:var(--amber)" : "color:var(--green)" }, `${pendingCount} records`)
+      ])
+    ]),
+    el("div", { style: "display:flex; gap:8px; margin-top:12px" }, [
+      el("button", { className: "btn btn-secondary", onclick: openSettings }, "⚙ Settings"),
+      el("button", { className: "btn btn-primary", onclick: syncAllPending, ...(pendingCount === 0 || !settings.url ? { disabled: "" } : {}) },
+        pendingCount > 0 ? `⟳ Sync ${pendingCount} Pending` : "✓ Semua Tersinkronisasi")
+    ])
+  ]);
+  wrap.appendChild(syncStatusCard);
+
+  // Export bar
+  const exportBar = el("div", { className: "export-bar" }, [
+    el("button", { className: "btn btn-primary", onclick: exportJSON }, "⬇ Export JSON"),
+    el("button", { className: "btn btn-primary", onclick: exportCSV }, "⬇ Export CSV"),
+    el("button", { className: "btn btn-danger btn-icon", onclick: clearAllData, title: "Hapus semua data" }, "🗑")
+  ]);
+  wrap.appendChild(exportBar);
+
+  if (completed.length === 0) {
+    wrap.appendChild(el("div", { className: "empty-state" }, [
+      el("h3", {}, "Belum ada data survey"),
+      el("p", {}, "Data akan muncul setelah ada survey yang selesai.")
+    ]));
+    view.appendChild(wrap);
+    return;
+  }
+
+  // Stats
+  const totalSurveys = completed.length;
+  const reasons = {};
+  const winbackDist = {};
+  const economicPressure = [];
+  completed.forEach((c) => {
+    const r = c.data.q5_alasan_utama || "unknown";
+    reasons[r] = (reasons[r] || 0) + 1;
+    const w = c.data.q20_winback || "unknown";
+    winbackDist[w] = (winbackDist[w] || 0) + 1;
+    if (c.activeSections.includes("D2")) economicPressure.push(c);
+  });
+  const economicPct = totalSurveys > 0 ? Math.round((economicPressure.length / totalSurveys) * 100) : 0;
+
+  const syncedCount = completed.filter((c) => c.synced).length;
+  const stats = el("div", { className: "stat-grid" }, [
+    statCard("TOTAL SURVEY", totalSurveys, `${syncedCount} tersinkronisasi`),
+    statCard("KENA D2 (EKONOMI)", `${economicPressure.length}`, `${economicPct}% dari total`),
+    statCard("WILLING WIN-BACK", `${winbackDist.ya || 0}`, `+${winbackDist.mungkin || 0} mungkin`),
+    statCard("HARD REJECT", `${winbackDist.tidak || 0}`, "tidak bersedia winback")
+  ]);
+  wrap.appendChild(stats);
+
+  // Reasons chart
+  const reasonsChart = el("div", { className: "chart-card" });
+  reasonsChart.appendChild(el("div", { className: "chart-title" }, "Distribusi Alasan Utama (No. 5)"));
+  const maxReasonCount = Math.max(...Object.values(reasons), 1);
+  const reasonLabels = {
+    jaringan: "Masalah jaringan", harga: "Harga mahal", kompetitor: "Pindah provider",
+    domisili: "Pindah domisili", tidak_butuh: "Tidak butuh internet", layanan: "Pelayanan kurang", lainnya: "Lainnya"
+  };
+  Object.entries(reasons).sort((a, b) => b[1] - a[1]).forEach(([k, v]) => {
+    const pct = (v / maxReasonCount) * 100;
+    reasonsChart.appendChild(el("div", { className: "bar-row" }, [
+      el("span", { className: "bar-label" }, reasonLabels[k] || k),
+      el("div", { className: "bar-track" }, [
+        el("div", { className: "bar-fill", style: `width: ${pct}%` }, `${Math.round((v / totalSurveys) * 100)}%`)
+      ]),
+      el("span", { className: "bar-count" }, String(v))
+    ]));
+  });
+  wrap.appendChild(reasonsChart);
+
+  // Economic pressure breakdown
+  if (economicPressure.length > 0) {
+    const ecoChart = el("div", { className: "chart-card" });
+    ecoChart.appendChild(el("div", { className: "chart-title" }, `Tekanan Ekonomi — Root Cause (${economicPressure.length} responden)`));
+    const causes = {};
+    economicPressure.forEach((c) => {
+      const cause = c.data.d2_1_perubahan || "unknown";
+      causes[cause] = (causes[cause] || 0) + 1;
+    });
+    const causeLabels = {
+      penghasilan_turun: "Penghasilan menurun",
+      kehilangan_kerja: "Kehilangan pekerjaan",
+      pengeluaran_besar: "Pengeluaran besar",
+      tidak_jawab: "Tidak menjawab"
+    };
+    const maxC = Math.max(...Object.values(causes), 1);
+    Object.entries(causes).sort((a, b) => b[1] - a[1]).forEach(([k, v]) => {
+      const pct = (v / maxC) * 100;
+      ecoChart.appendChild(el("div", { className: "bar-row" }, [
+        el("span", { className: "bar-label" }, causeLabels[k] || k),
+        el("div", { className: "bar-track" }, [
+          el("div", { className: "bar-fill", style: `width: ${pct}%; background: #F59E0B;` }, String(v))
+        ]),
+        el("span", { className: "bar-count" }, "")
+      ]));
+    });
+    wrap.appendChild(ecoChart);
+  }
+
+  // Recent responses
+  const recent = el("div", { className: "chart-card" });
+  recent.appendChild(el("div", { className: "chart-title" }, `Riwayat Survey (${completed.length} terakhir)`));
+  completed.slice().reverse().slice(0, 10).forEach((c) => {
+    const meta = new Date(c.completedAt).toLocaleString("id-ID", { day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" });
+    const name = c.data.q1_customer_id || "-";
+    const reason = reasonLabels[c.data.q5_alasan_utama] || "-";
+    recent.appendChild(el("div", { className: "draft-card", style: "margin-bottom:8px;padding:10px" }, [
+      el("div", { className: "draft-info" }, [
+        el("div", { className: "draft-name" }, name),
+        el("div", { className: "draft-meta" }, `${meta} · ${reason} · Sections: ${c.activeSections.join(", ")}`)
+      ])
+    ]));
+  });
+  wrap.appendChild(recent);
+  view.appendChild(wrap);
+}
+
+function statCard(label, val, note) {
+  return el("div", { className: "stat-card" }, [
+    el("div", { className: "stat-label" }, label),
+    el("div", { className: "stat-value" }, String(val)),
+    el("div", { className: "stat-note" }, note)
+  ]);
+}
+
+// ==========================================================================
+// EXPORT
+// ==========================================================================
+
+function exportJSON() {
+  const store = loadStore();
+  const data = { exportedAt: new Date().toISOString(), completed: store.completed || [] };
+  const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
+  triggerDownload(blob, `survey_churn_jabeka_${Date.now()}.json`);
+}
+
+function exportCSV() {
+  const store = loadStore();
+  const completed = store.completed || [];
+  if (completed.length === 0) { alert("Belum ada data untuk diexport."); return; }
+
+  // Collect all question ids
+  const allQIds = [];
+  Object.values(SCHEMA).forEach((sec) => {
+    sec.questions.forEach((q) => allQIds.push(q.id));
+  });
+
+  const headers = ["survey_id", "completed_at", "active_sections", ...allQIds];
+  const rows = [headers.join(",")];
+  completed.forEach((c) => {
+    const row = [
+      c.id,
+      new Date(c.completedAt).toISOString(),
+      (c.activeSections || []).join("|"),
+      ...allQIds.map((qid) => {
+        const v = c.data[qid];
+        if (v == null) return "";
+        const str = Array.isArray(v) ? v.join("|") : String(v);
+        return `"${str.replace(/"/g, '""')}"`;
+      })
+    ];
+    rows.push(row.join(","));
+  });
+  const blob = new Blob([rows.join("\n")], { type: "text/csv" });
+  triggerDownload(blob, `survey_churn_jabeka_${Date.now()}.csv`);
+}
+
+function triggerDownload(blob, filename) {
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = filename;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+function clearAllData() {
+  if (!confirm("Hapus SEMUA data survey (drafts + completed)? Tindakan ini tidak bisa di-undo.")) return;
+  if (!confirm("Yakin? Data akan hilang permanen.")) return;
+  localStorage.removeItem(STORAGE_KEY);
+  render();
+}
+
+// ==========================================================================
+// GOOGLE SHEETS INTEGRATION
+// ==========================================================================
+
+const SETTINGS_KEY = "cbn_survey_settings";
+
+function loadSettings() {
+  try {
+    return JSON.parse(localStorage.getItem(SETTINGS_KEY) || "{}");
+  } catch (e) { return {}; }
+}
+function saveSettingsData(s) {
+  localStorage.setItem(SETTINGS_KEY, JSON.stringify(s));
+}
+
+const APPS_SCRIPT_CODE = `// ==========================================================
+// Google Apps Script — CBN Survey Churn Jabeka Sync Endpoint
+// ==========================================================
+// SETUP:
+// 1. Buat Google Sheet baru
+// 2. Extensions -> Apps Script -> paste kode ini
+// 3. Ubah SECRET di bawah (harus match dengan app)
+// 4. Deploy -> New Deployment -> Web app
+//    Execute as: Me | Access: Anyone
+// 5. Copy Web App URL -> paste ke settings di survey app
+// ==========================================================
+
+const SECRET = "cbn-jabeka-2026";  // GANTI dengan secret Anda
+const SHEET_NAME = "Responses";
+
+function doPost(e) {
+  try {
+    const body = JSON.parse(e.postData.contents);
+    if (body.secret !== SECRET) {
+      return json({ ok: false, error: "Invalid secret" });
+    }
+
+    const ss = SpreadsheetApp.getActiveSpreadsheet();
+    let sheet = ss.getSheetByName(SHEET_NAME);
+    if (!sheet) sheet = ss.insertSheet(SHEET_NAME);
+
+    const records = Array.isArray(body.records) ? body.records : [body.record];
+
+    // Build header row from first record if sheet empty
+    if (sheet.getLastRow() === 0 && records.length > 0) {
+      const headers = ["synced_at", "survey_id", "completed_at", "active_sections",
+                       ...Object.keys(records[0].data || {})];
+      sheet.appendRow(headers);
+      sheet.getRange(1, 1, 1, headers.length).setFontWeight("bold").setBackground("#1E3A5F").setFontColor("#FFFFFF");
+      sheet.setFrozenRows(1);
+    }
+
+    const headers = sheet.getRange(1, 1, 1, sheet.getLastColumn()).getValues()[0];
+
+    records.forEach(rec => {
+      // Skip duplicates (same survey_id already present)
+      if (rec.id) {
+        const existing = sheet.getRange(2, 2, Math.max(sheet.getLastRow()-1, 1), 1).getValues().flat();
+        if (existing.includes(rec.id)) return;
+      }
+      const row = headers.map(h => {
+        if (h === "synced_at") return new Date().toISOString();
+        if (h === "survey_id") return rec.id || "";
+        if (h === "completed_at") return rec.completedAt ? new Date(rec.completedAt).toISOString() : "";
+        if (h === "active_sections") return (rec.activeSections || []).join("|");
+        const v = (rec.data || {})[h];
+        if (v == null) return "";
+        return Array.isArray(v) ? v.join("|") : v;
+      });
+      sheet.appendRow(row);
+    });
+
+    return json({ ok: true, received: records.length });
+  } catch (err) {
+    return json({ ok: false, error: err.toString() });
+  }
+}
+
+function doGet() {
+  return json({ ok: true, message: "CBN Survey endpoint aktif. Gunakan POST untuk kirim data." });
+}
+
+function json(obj) {
+  return ContentService.createTextOutput(JSON.stringify(obj))
+    .setMimeType(ContentService.MimeType.JSON);
+}`;
+
+function openSettings() {
+  const s = loadSettings();
+  document.getElementById("settings-url").value = s.url || "";
+  document.getElementById("settings-secret").value = s.secret || "cbn-jabeka-2026";
+  document.getElementById("apps-script-code").textContent = APPS_SCRIPT_CODE;
+  document.getElementById("settings-status").innerHTML = "";
+  document.getElementById("settings-modal").classList.add("open");
+}
+function closeSettings() {
+  document.getElementById("settings-modal").classList.remove("open");
+}
+function saveSettings() {
+  const url = document.getElementById("settings-url").value.trim();
+  const secret = document.getElementById("settings-secret").value.trim();
+  saveSettingsData({ url, secret });
+  showStatus("ok", "✓ Pengaturan tersimpan");
+  setTimeout(closeSettings, 800);
+}
+function copyAppsScript() {
+  navigator.clipboard.writeText(APPS_SCRIPT_CODE).then(() => {
+    alert("Kode Apps Script tersalin. Paste di Google Apps Script editor.");
+  });
+}
+function showStatus(kind, msg) {
+  document.getElementById("settings-status").innerHTML =
+    `<div class="status-line ${kind}">${msg}</div>`;
+}
+
+async function testSync() {
+  const url = document.getElementById("settings-url").value.trim();
+  const secret = document.getElementById("settings-secret").value.trim();
+  if (!url) { showStatus("err", "❌ URL belum diisi"); return; }
+  showStatus("warn", "⏳ Testing koneksi...");
+  const testRecord = {
+    id: "TEST-" + Date.now(),
+    completedAt: Date.now(),
+    activeSections: ["A", "B"],
+    data: { q1_customer_id: "TEST-CONNECTION", q4_bersedia: "ya", q5_alasan_utama: "test" }
+  };
+  try {
+    await fetch(url, {
+      method: "POST",
+      mode: "no-cors",
+      headers: { "Content-Type": "text/plain" },
+      body: JSON.stringify({ secret, record: testRecord })
+    });
+    // no-cors returns opaque response — kalau tidak throw, dianggap terkirim
+    showStatus("ok", "✓ Request terkirim. Cek Google Sheet Anda — kalau muncul row 'TEST-CONNECTION', koneksi OK.");
+  } catch (err) {
+    showStatus("err", "❌ Gagal: " + err.message);
+  }
+}
+
+async function syncRecord(record) {
+  const s = loadSettings();
+  if (!s.url) return { ok: false, reason: "no-url" };
+  try {
+    await fetch(s.url, {
+      method: "POST",
+      mode: "no-cors",
+      headers: { "Content-Type": "text/plain" },
+      body: JSON.stringify({ secret: s.secret || "", record })
+    });
+    return { ok: true };
+  } catch (err) {
+    return { ok: false, reason: err.message };
+  }
+}
+
+async function syncAllPending() {
+  const store = loadStore();
+  const pending = (store.completed || []).filter((c) => !c.synced);
+  if (pending.length === 0) {
+    alert("Tidak ada data yang perlu di-sync.");
+    return;
+  }
+  const s = loadSettings();
+  if (!s.url) {
+    alert("URL Apps Script belum di-set. Buka Settings (⚙) terlebih dahulu.");
+    return;
+  }
+
+  showSyncIndicator(`Syncing ${pending.length} records...`);
+  let success = 0;
+  for (const rec of pending) {
+    const result = await syncRecord(rec);
+    if (result.ok) {
+      rec.synced = true;
+      rec.syncedAt = Date.now();
+      success++;
+    }
+  }
+  saveStore(store);
+  hideSyncIndicator();
+  alert(`Sync selesai. ${success} dari ${pending.length} records terkirim.`);
+  render();
+}
+
+function showSyncIndicator(text) {
+  document.getElementById("sync-indicator-text").textContent = text || "Syncing...";
+  document.getElementById("sync-indicator").classList.add("show");
+}
+function hideSyncIndicator() {
+  document.getElementById("sync-indicator").classList.remove("show");
+}
+
+// ==========================================================================
+// INIT
+// ==========================================================================
+
+render();
+</script>
+</body>
+</html>
